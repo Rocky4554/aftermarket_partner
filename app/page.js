@@ -2,8 +2,8 @@
 
 import { useState, useCallback } from 'react';
 
-function formatPrice(cents) {
-  return '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 0 });
+function formatPrice(dollars) {
+  return '$' + Number(dollars).toLocaleString('en-US', { minimumFractionDigits: 0 });
 }
 
 function Logo() {
@@ -63,11 +63,29 @@ function SearchBar({ onSearch, loading }) {
 }
 
 function DomainCard({ domain, price, makeOffer }) {
-  const [toastVisible, setToastVisible] = useState(false);
+  const [buying, setBuying] = useState(false);
+  const [err, setErr] = useState('');
 
-  const handleBuy = () => {
-    setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 2000);
+  const handleBuy = async () => {
+    if (makeOffer) return;
+    setBuying(true);
+    setErr('');
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url; // → Stripe Checkout
+        return;
+      }
+      setErr(data.error || 'Could not start checkout.');
+    } catch {
+      setErr('Network error. Please try again.');
+    }
+    setBuying(false);
   };
 
   const parts = domain.split('.');
@@ -91,14 +109,15 @@ function DomainCard({ domain, price, makeOffer }) {
         </div>
         <button
           onClick={handleBuy}
-          className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm transition-colors cursor-pointer"
+          disabled={buying}
+          className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:bg-violet-300 text-white font-semibold text-sm transition-colors cursor-pointer disabled:cursor-not-allowed"
         >
-          {makeOffer ? 'Make Offer' : 'Buy Now'}
+          {makeOffer ? 'Make Offer' : buying ? 'Redirecting…' : 'Buy Now'}
         </button>
       </div>
-      {toastVisible && (
-        <div className="absolute top-3 right-3 bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg animate-fade-in">
-          Coming soon!
+      {err && (
+        <div className="absolute top-3 right-3 bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg max-w-[80%]">
+          {err}
         </div>
       )}
     </div>
