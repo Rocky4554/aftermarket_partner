@@ -157,8 +157,13 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Logo />
+          <nav className="flex gap-4 text-sm font-medium text-gray-600">
+            <a href="/mor" className="hover:text-violet-600">MoR demo</a>
+            <a href="/non-mor" className="hover:text-violet-600">Non-MoR demo</a>
+            <a href="/console" className="hover:text-violet-600">API console</a>
+          </nav>
         </div>
       </header>
 
